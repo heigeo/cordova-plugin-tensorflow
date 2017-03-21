@@ -76,10 +76,6 @@ private void classify(String modelName, String image, CallbackContext callbackCo
     List<Recognition> results = classifier.recognizeImage(cropped);
     JSONArray output = new JSONArray();
     try {
-        JSONObject info = new JSONObject();
-        info.put("title", "Total");
-        info.put("confidence", results.size());
-        output.put(info);
         for (Recognition result : results) {
             JSONObject record = new JSONObject();
             record.put("title", result.getTitle());

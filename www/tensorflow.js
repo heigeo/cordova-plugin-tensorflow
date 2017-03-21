@@ -45,7 +45,7 @@ TensorFlow.prototype.classify = function(image, successCallback, errorCallback) 
             }
             self.classify(image, successCallback, errorCallback);
         }, errorCallback);
-        return;
+        return promise;
     }
     
     cordova.exec(
