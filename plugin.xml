@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="cordova-plugin-tensorflow" version="0.0.1">
+    <name>TensorFlow for Cordova</name>
+    <description>Cordova/PhoneGap wrapper for TensorFlow's image recognition binary library.</description>
+    <license>MIT</license>
+    <keywords>cordova,device</keywords>
+
+    <dependency id="cordova-plugin-file-transfer" />
+    <dependency id="cordova-plugin-zip" />
+
+    <js-module src="www/tensorflow.js" name="tensorflow">
+        <clobbers target="TensorFlow" />
+    </js-module>
+
+    <platform name="android">
+	<config-file target="config.xml" parent="/*">
+            <feature name="TensorFlow">
+              <param name="android-package" value="io.wq.tensorflow.TensorFlow" />
+            </feature>
+	</config-file>
+
+	<source-file src="src/android/TensorFlow.java" target-dir="src/io/wq/tensorflow" />
+	<source-file src="src/android/tf_libs/Classifier.java" target-dir="src/org/tensorflow/demo" />
+	<source-file src="src/android/tf_libs/TensorFlowImageClassifier.java" target-dir="src/org/tensorflow/demo" />
+	<source-file src="src/android/tf_libs/libandroid_tensorflow_inference_java.jar" target-dir="libs" />
+        <source-file src="src/android/tf_libs/armeabi-v7a/libtensorflow_inference.so" target-dir="libs/armeabi" />
+
+    </platform>
+
+</plugin>
+
