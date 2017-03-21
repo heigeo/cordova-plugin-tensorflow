@@ -19,6 +19,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.os.Trace;
 import android.util.Log;
+import java.io.FileInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,9 +33,6 @@ import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
 
 /** A classifier specialized to label images using TensorFlow. */
 public class TensorFlowImageClassifier implements Classifier {
-  static {
-    System.loadLibrary("tensorflow_demo");
-  }
 
   private static final String TAG = "TensorFlowImageClassifier";
 
@@ -88,7 +86,8 @@ public class TensorFlowImageClassifier implements Classifier {
 
     // Read the label names into memory.
     // TODO(andrewharp): make this handle non-assets.
-    String actualFilename = labelFilename.split("file:///android_asset/")[1];
+    final boolean hasAssetPrefix = labelFilename.startsWith("file:///android_asset/");
+    String actualFilename = hasAssetPrefix ? labelFilename.split("file:///android_asset/")[1] : labelFilename;
     Log.i(TAG, "Reading labels from: " + actualFilename);
     BufferedReader br = null;
     try {
@@ -99,7 +98,19 @@ public class TensorFlowImageClassifier implements Classifier {
       }
       br.close();
     } catch (IOException e) {
-      throw new RuntimeException("Problem reading label file!" , e);
+      if (hasAssetPrefix) {
+        throw new RuntimeException("Problem reading label file!" , e);
+      }
+      try {
+        br = new BufferedReader(new InputStreamReader(new FileInputStream(actualFilename)));
+        String line;
+        while ((line = br.readLine()) != null) {
+          c.labels.add(line);
+        }
+        br.close();
+      } catch (IOException e2) {
+        throw new RuntimeException("Problem reading label file!" , e);
+      }
     }
 
     c.inferenceInterface = new TensorFlowInferenceInterface();
