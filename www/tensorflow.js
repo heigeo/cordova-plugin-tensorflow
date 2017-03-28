@@ -91,7 +91,7 @@ function registerModel(modelId, model) {
 function getModel(modelId) {
     var model = models[modelId];
     if (!model) {
-        errorCallback("Unknown model " + modelId);
+        throw "Unknown model " + modelId;
         return;
     }
     return model;
@@ -121,7 +121,13 @@ registerModel('inception-v3', {
 });
 
 function loadModel(modelId, callback, errorCallback, progressCallback) {
-    var model = getModel(modelId);
+    var model;
+    try {
+        model = getModel(modelId)
+    } catch (e) {
+        errorCallback(e);
+        return;
+    }
     if (!progressCallback) {
         progressCallback = function(stat) {
             console.log(stat.label);
@@ -184,7 +190,7 @@ function fetchZip(model, callback, errorCallback, progressCallback) {
     resolveLocalFileSystemURL(model.local_model_path, alreadyLoaded, downloadZip);
 
     function alreadyLoaded() {
-        model.downloaded = true;
+        model.cached = true;
         callback();
     }
 
@@ -217,7 +223,7 @@ function fetchZip(model, callback, errorCallback, progressCallback) {
                     errorCallback('Error unzipping file');
                     return;
                 }
-                model.downloaded = true;
+                model.cached = true;
                 callback();
             });
         }, errorCallback);
