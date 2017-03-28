@@ -14,19 +14,38 @@
     </js-module>
 
     <platform name="android">
-	<config-file target="config.xml" parent="/*">
+        <config-file target="config.xml" parent="/*">
             <feature name="TensorFlow">
               <param name="android-package" value="io.wq.tensorflow.TensorFlow" />
             </feature>
-	</config-file>
+        </config-file>
 
-	<source-file src="src/android/TensorFlow.java" target-dir="src/io/wq/tensorflow" />
-	<source-file src="src/android/tf_libs/Classifier.java" target-dir="src/org/tensorflow/demo" />
-	<source-file src="src/android/tf_libs/TensorFlowImageClassifier.java" target-dir="src/org/tensorflow/demo" />
-	<source-file src="src/android/tf_libs/libandroid_tensorflow_inference_java.jar" target-dir="libs" />
+        <source-file src="src/android/TensorFlow.java" target-dir="src/io/wq/tensorflow" />
+        <source-file src="src/android/tf_libs/Classifier.java" target-dir="src/org/tensorflow/demo" />
+        <source-file src="src/android/tf_libs/TensorFlowImageClassifier.java" target-dir="src/org/tensorflow/demo" />
+        <source-file src="src/android/tf_libs/libandroid_tensorflow_inference_java.jar" target-dir="libs" />
         <source-file src="src/android/tf_libs/armeabi-v7a/libtensorflow_inference.so" target-dir="libs/armeabi" />
 
     </platform>
 
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="TensorFlow">
+                <param name="ios-package" value="TensorFlow" />
+            </feature>
+        </config-file>
+
+        <framework type='podspec' src='TensorflowPod' spec=":podspec => 'https://raw.githubusercontent.com/heigeo/TensorflowPod/master/TensorflowPod.podspec'"/>
+
+        <header-file src="src/ios/TensorFlow.h" />
+        <source-file src="src/ios/TensorFlow.mm" compiler-flags="-std=gnu++11" />
+
+        <header-file src="src/ios/tf_libs/tensorflow_utils.h" />
+        <source-file src="src/ios/tf_libs/tensorflow_utils.mm" compiler-flags="-std=gnu++11" />
+
+        <header-file src="src/ios/tf_libs/ios_image_load.h" />
+        <source-file src="src/ios/tf_libs/ios_image_load.mm" compiler-flags="-std=gnu++11" />
+
+    </platform>
 </plugin>
 
