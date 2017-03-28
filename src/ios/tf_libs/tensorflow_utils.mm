@@ -107,18 +107,7 @@ bool PortableReadFileToProto(const std::string& file_name,
   return proto->ParseFromCodedStream(&coded_stream);
 }
 
-NSString* FilePathForResourceName(NSString* name, NSString* extension) {
-  NSString* file_path =
-      [[NSBundle mainBundle] pathForResource:name ofType:extension];
-  if (file_path == NULL) {
-    LOG(FATAL) << "Couldn't find '" << [name UTF8String] << "."
-               << [extension UTF8String] << "' in bundle.";
-    return nullptr;
-  }
-  return file_path;
-}
-
-tensorflow::Status LoadModel(NSString* file_name, NSString* file_type,
+tensorflow::Status LoadModel(NSString* model_path,
                              std::unique_ptr<tensorflow::Session>* session) {
   tensorflow::SessionOptions options;
 
@@ -133,13 +122,6 @@ tensorflow::Status LoadModel(NSString* file_name, NSString* file_type,
 
   tensorflow::GraphDef tensorflow_graph;
 
-  NSString* model_path = FilePathForResourceName(file_name, file_type);
-  if (!model_path) {
-    LOG(ERROR) << "Failed to find model proto at" << [file_name UTF8String]
-               << [file_type UTF8String];
-    return tensorflow::errors::NotFound([file_name UTF8String],
-                                        [file_type UTF8String]);
-  }
   const bool read_proto_succeeded =
       PortableReadFileToProto([model_path UTF8String], &tensorflow_graph);
   if (!read_proto_succeeded) {
@@ -157,10 +139,9 @@ tensorflow::Status LoadModel(NSString* file_name, NSString* file_type,
 }
 
 tensorflow::Status LoadMemoryMappedModel(
-    NSString* file_name, NSString* file_type,
+    NSString* network_path,
     std::unique_ptr<tensorflow::Session>* session,
     std::unique_ptr<tensorflow::MemmappedEnv>* memmapped_env) {
-  NSString* network_path = FilePathForResourceName(file_name, file_type);
   memmapped_env->reset(
       new tensorflow::MemmappedEnv(tensorflow::Env::Default()));
   tensorflow::Status mmap_status =
@@ -209,16 +190,9 @@ tensorflow::Status LoadMemoryMappedModel(
   return tensorflow::Status::OK();
 }
 
-tensorflow::Status LoadLabels(NSString* file_name, NSString* file_type,
+tensorflow::Status LoadLabels(NSString* labels_path,
                               std::vector<std::string>* label_strings) {
   // Read the label list
-  NSString* labels_path = FilePathForResourceName(file_name, file_type);
-  if (!labels_path) {
-    LOG(ERROR) << "Failed to find model proto at" << [file_name UTF8String]
-               << [file_type UTF8String];
-    return tensorflow::errors::NotFound([file_name UTF8String],
-                                        [file_type UTF8String]);
-  }
   std::ifstream t;
   t.open([labels_path UTF8String]);
   std::string line;

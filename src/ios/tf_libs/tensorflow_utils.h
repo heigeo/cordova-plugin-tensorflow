@@ -25,7 +25,7 @@
 // Reads a serialized GraphDef protobuf file from the bundle, typically
 // created with the freeze_graph script. Populates the session argument with a
 // Session object that has the model loaded.
-tensorflow::Status LoadModel(NSString* file_name, NSString* file_type,
+tensorflow::Status LoadModel(NSString* file_name,
                              std::unique_ptr<tensorflow::Session>* session);
 
 // Loads a model from a file that has been created using the
@@ -35,12 +35,12 @@ tensorflow::Status LoadModel(NSString* file_name, NSString* file_type,
 // memory pressure, since the read-only parameter regions can be easily paged
 // out and don't count toward memory limits on iOS.
 tensorflow::Status LoadMemoryMappedModel(
-    NSString* file_name, NSString* file_type,
+    NSString* file_name,
     std::unique_ptr<tensorflow::Session>* session,
     std::unique_ptr<tensorflow::MemmappedEnv>* memmapped_env);
 
 // Takes a text file with a single label on each line, and returns a list.
-tensorflow::Status LoadLabels(NSString* file_name, NSString* file_type,
+tensorflow::Status LoadLabels(NSString* file_name,
                               std::vector<std::string>* label_strings);
 
 // Sorts the results from a model execution, and returns the highest scoring.
