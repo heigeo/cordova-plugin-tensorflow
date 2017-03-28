@@ -49,4 +49,11 @@ void GetTopN(const Eigen::TensorMap<Eigen::Tensor<float, 1, Eigen::RowMajor>,
              const int num_results, const float threshold,
              std::vector<std::pair<float, int> >* top_results);
 
+struct Result {
+   NSString* label;
+   NSNumber* confidence;
+};
+
+tensorflow::Status RunInferenceOnImage(NSString* image, int input_size, float input_mean, float input_std, std::string input_layer, std::string output_layer, std::unique_ptr<tensorflow::Session>* session, std::vector<std::string>* labels, std::vector<Result>* results);
+
 #endif  // TENSORFLOW_CONTRIB_IOS_EXAMPLES_CAMERA_TENSORFLOW_UTILS_H_
