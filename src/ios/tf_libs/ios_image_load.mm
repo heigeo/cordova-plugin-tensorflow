@@ -37,13 +37,28 @@ std::vector<uint8> LoadImageFromFile(const char* file_name,
   CFDataRef file_data_ref = CFDataCreateWithBytesNoCopy(NULL, file_data.data(),
 						      bytes_in_file,
 						      kCFAllocatorNull);
-  CGDataProviderRef image_provider =
-    CGDataProviderCreateWithCFData(file_data_ref);
-
   const char* suffix = strrchr(file_name, '.');
   if (!suffix || suffix == file_name) {
     suffix = "";
   }
+  return LoadImageFromData(file_data_ref, suffix, out_width, out_height, out_channels);
+}
+
+std::vector<uint8> LoadImageFromBase64(NSString* base64data,
+				      int* out_width, int* out_height,
+				      int* out_channels) {
+  NSData *data = [[NSData alloc] initWithBase64EncodedString:base64data options:0];
+  CFDataRef data_ref = CFDataCreateWithBytesNoCopy(NULL, (UInt8 *)[data bytes], [data length], kCFAllocatorNull);
+  return LoadImageFromData(data_ref, [@".jpeg" UTF8String], out_width, out_height, out_channels);
+}
+
+std::vector<uint8> LoadImageFromData(CFDataRef data_ref,
+                                     const char* suffix,
+				     int* out_width, int* out_height,
+				     int* out_channels) {
+  CGDataProviderRef image_provider =
+    CGDataProviderCreateWithCFData(data_ref);
+
   CGImageRef image;
   if (strcasecmp(suffix, ".png") == 0) {
     image = CGImageCreateWithPNGDataProvider(image_provider, NULL, true,
@@ -54,8 +69,8 @@ std::vector<uint8> LoadImageFromFile(const char* file_name,
 					      kCGRenderingIntentDefault);
   } else {
     CFRelease(image_provider);
-    CFRelease(file_data_ref);
-    fprintf(stderr, "Unknown suffix for file '%s'\n", file_name);
+    CFRelease(data_ref);
+    fprintf(stderr, "Unknown suffix '%s'\n", suffix);
     *out_width = 0;
     *out_height = 0;
     *out_channels = 0;
@@ -78,7 +93,7 @@ std::vector<uint8> LoadImageFromFile(const char* file_name,
   CGContextRelease(context);
   CFRelease(image);
   CFRelease(image_provider);
-  CFRelease(file_data_ref);
+  CFRelease(data_ref);
 
   *out_width = width;
   *out_height = height;
