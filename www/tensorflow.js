@@ -145,7 +145,7 @@ function loadModel(modelId, callback, errorCallback, progressCallback) {
         };
     }
     if (!model.cached) {
-        checkCached(model, function(cached) {
+        checkCached(modelId, function(cached) {
             if (!cached) {
                 fetchModel(
                     model,
@@ -195,7 +195,14 @@ function fetchModel(model, callback, errorCallback, progressCallback) {
     fetchZip(model, callback, errorCallback, progressCallback);
 }
 
-function checkCached(model, callback, errorCallback) {
+function checkCached(modelId, callback, errorCallback) {
+    var model;
+    try {
+        model = getModel(modelId);
+    } catch (e) {
+        errorCallback(e);
+        return;
+    }
     var zipUrl = model.model_path.split('#')[0];
     if (model.label_path.indexOf(zipUrl) == -1) {
         errorCallback('Model and labels must be in same zip file!');
