@@ -27,6 +27,18 @@ TensorFlow.prototype.load = function(successCallback, errorCallback) {
     return promise;
 };
 
+TensorFlow.prototype.checkCached = function(successCallback, errorCallback) {
+    var promise;
+    if (window.Promise && !successCallback) {
+        promise = new Promise(function(resolve, reject) {
+            successCallback = resolve;
+            errorCallback = reject;
+        });
+    }
+    checkCached(this.modelId, successCallback, errorCallback);
+    return promise;
+};
+
 TensorFlow.prototype.classify = function(image, successCallback, errorCallback) {
     var promise;
     if (window.Promise && !successCallback) {
@@ -47,7 +59,7 @@ TensorFlow.prototype.classify = function(image, successCallback, errorCallback) 
         }, errorCallback);
         return promise;
     }
-    
+
     cordova.exec(
         successCallback, errorCallback,
         "TensorFlow", "classify", [self.modelId, image]
@@ -92,7 +104,6 @@ function getModel(modelId) {
     var model = models[modelId];
     if (!model) {
         throw "Unknown model " + modelId;
-        return;
     }
     return model;
 }
@@ -123,7 +134,7 @@ registerModel('inception-v3', {
 function loadModel(modelId, callback, errorCallback, progressCallback) {
     var model;
     try {
-        model = getModel(modelId)
+        model = getModel(modelId);
     } catch (e) {
         errorCallback(e);
         return;
@@ -134,7 +145,18 @@ function loadModel(modelId, callback, errorCallback, progressCallback) {
         };
     }
     if (!model.cached) {
-        fetchModel(model, initClassifier, errorCallback, progressCallback);
+        checkCached(model, function(cached) {
+            if (!cached) {
+                fetchModel(
+                    model,
+                    initClassifier,
+                    errorCallback,
+                    progressCallback
+                );
+            } else {
+                initClassifier();
+            }
+        }, errorCallback);
     } else {
         initClassifier();
     }
@@ -173,7 +195,7 @@ function fetchModel(model, callback, errorCallback, progressCallback) {
     fetchZip(model, callback, errorCallback, progressCallback);
 }
 
-function fetchZip(model, callback, errorCallback, progressCallback) {
+function checkCached(model, callback, errorCallback) {
     var zipUrl = model.model_path.split('#')[0];
     if (model.label_path.indexOf(zipUrl) == -1) {
         errorCallback('Model and labels must be in same zip file!');
@@ -187,47 +209,54 @@ function fetchZip(model, callback, errorCallback, progressCallback) {
     model.local_model_path = dir + '/' + modelZipName;
     model.local_label_path = dir + '/' + labelZipName;
 
-    resolveLocalFileSystemURL(model.local_model_path, alreadyLoaded, downloadZip);
+    resolveLocalFileSystemURL(
+        model.local_model_path, cached(true), cached(false)
+    );
 
-    function alreadyLoaded() {
-        model.cached = true;
-        callback();
+    function cached(result) {
+        return function() {
+            model.cached = result;
+            callback(model.cached);
+        };
     }
+}
 
-    function downloadZip() {
-        var fileTransfer = new FileTransfer();
+function fetchZip(model, callback, errorCallback, progressCallback) {
+    var zipUrl = model.model_path.split('#')[0];
+    var zipPath = getPath(model.id + '.zip');
+    var dir = getPath(model.id);
+    var fileTransfer = new FileTransfer();
+    progressCallback({
+        'status': 'downloading',
+        'label': 'Downloading model files',
+    });
+    fileTransfer.onprogress = function(evt) {
+        var label = 'Downloading';
+        if (evt.lengthComputable) {
+            label += ' (' + evt.loaded + '/' + evt.total + ')';
+        } else {
+            label += '...';
+        }
         progressCallback({
             'status': 'downloading',
-            'label': 'Downloading model files',
+            'label': label,
+            'detail': evt
         });
-        fileTransfer.onprogress = function(evt) {
-            var label = 'Downloading';
-            if (evt.lengthComputable) {
-                label += ' (' + evt.loaded + '/' + evt.total + ')';
-            } else {
-                label += '...';
+    };
+    fileTransfer.download(zipUrl, zipPath, function(entry) {
+        progressCallback({
+            'status': 'unzipping',
+            'label': 'Extracting contents'
+        });
+        zip.unzip(zipPath, dir, function(result) {
+            if (result == -1) {
+                errorCallback('Error unzipping file');
+                return;
             }
-            progressCallback({
-                'status': 'downloading',
-                'label': label,
-                'detail': evt
-            });
-        };
-        fileTransfer.download(zipUrl, zipPath, function(entry) {
-            progressCallback({
-                'status': 'unzipping',
-                'label': 'Extracting contents'
-            });
-            zip.unzip(zipPath, dir, function(result) {
-                if (result == -1) {
-                    errorCallback('Error unzipping file');
-                    return;
-                }
-                model.cached = true;
-                callback();
-            });
-        }, errorCallback);
-    }
+            model.cached = true;
+            callback();
+        });
+    }, errorCallback);
 }
 
 TensorFlow._models = models;
