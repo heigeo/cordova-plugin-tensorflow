@@ -60,7 +60,7 @@ var tf = new TensorFlow('custom-model', {
 ```
 
 To use a custom model, follow the steps to [retrain the model](https://www.tensorflow.org/tutorials/image_retraining) and [optimize it for mobile use](https://petewarden.com/2016/09/27/tensorflow-for-mobile-poets/).
-Put the .pb and .txt files in a HTTP-accessible zip file, which will be downloaded via the [FileTransfer plugin](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file-transfer/).  If you use the generic inception model it will be downloaded from [the TensorFlow website](https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip) on first use.
+Put the .pb and .txt files in a HTTP-accessible zip file, which will be downloaded via the [FileTransfer plugin](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file-transfer/).  If you use the generic Inception model it will be downloaded from [the TensorFlow website](https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip) on first use.
 
 ### Methods
 
@@ -103,8 +103,8 @@ tf.onprogress = function(evt) {
         if (evt.detail) {
             // evt.detail is from the FileTransfer API
             var $elem = $('progress');
-            $elem.attr('max', total);
-            $elem.attr('value', loaded);
+            $elem.attr('max', evt.detail.total);
+            $elem.attr('value', evt.detail.loaded);
         }
     } else if (evt['status'] == 'unzipping') {
         console.log("Extracting contents...");
